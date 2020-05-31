@@ -1,9 +1,14 @@
 package fr.sledunois.vertx.authentication;
 
+import fr.sledunois.vertx.authentication.bean.Salt;
+import fr.sledunois.vertx.authentication.pg.Pg;
+import fr.sledunois.vertx.authentication.pg.PgResult;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.*;
+import io.vertx.sqlclient.Tuple;
 
 public class MainVerticle extends HttpVerticle {
 
@@ -26,11 +31,31 @@ public class MainVerticle extends HttpVerticle {
 
     router.route().handler(BodyHandler.create(false));
     router.get("/sign-in").handler(this::signIn);
+    router.get("/sign-up").handler(this::signUp);
     router.get("/sign-out").handler(this::signOut);
+    router.post("/register").handler(this::register);
 
     router.route().handler(sessionHandler);
     router.post("/login").handler(formLoginHandler);
     router.get("/").handler(redirectAuthHandler).handler(this::indexPage);
+  }
+
+  private void register(RoutingContext rc) {
+    MultiMap attributes = rc.request().formAttributes();
+    if (!attributes.contains("username") || !attributes.contains("password")) {
+      rc.response().setStatusCode(400).end();
+      return;
+    }
+    String username = attributes.get("username");
+    String password = attributes.get("password");
+    String salt = new Salt(password).SHA1();
+    String query = "INSERT INTO public.user(username, password) VALUES ($1, $2) RETURNING *;";
+    Pg.getInstance().preparedQuery(query, Tuple.of(username, salt),
+      PgResult.uniqueJsonResult(ar -> rc.response().setStatusCode(302).putHeader("location", ar.succeeded() ? "/" : "/sign-in").end()));
+  }
+
+  private void signUp(RoutingContext rc) {
+    rc.response().sendFile("static/sign-up.html");
   }
 
   private void signOut(RoutingContext rc) {
