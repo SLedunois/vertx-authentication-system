@@ -7,6 +7,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 
@@ -24,6 +25,7 @@ public class HttpVerticle extends AbstractVerticle {
   protected HttpServer createHttpServer(Integer port) {
     sessionStore = LocalSessionStore.create(vertx);
     router = Router.router(vertx);
+    router.route().handler(BodyHandler.create(false));
 
     return vertx.createHttpServer()
       .requestHandler(router)
