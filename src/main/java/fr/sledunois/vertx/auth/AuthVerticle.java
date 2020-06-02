@@ -7,10 +7,7 @@ import fr.sledunois.vertx.util.HttpVerticle;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.AuthHandler;
 import io.vertx.ext.web.handler.FormLoginHandler;
-import io.vertx.ext.web.handler.RedirectAuthHandler;
-import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.sqlclient.Tuple;
 
 public class AuthVerticle extends HttpVerticle {
@@ -24,11 +21,6 @@ public class AuthVerticle extends HttpVerticle {
       .setPasswordParam("password")
       .setUsernameParam("username")
       .setDirectLoggedInOKURL("/");
-
-    SessionHandler sessionHandler = SessionHandler.create(sessionStore)
-      .setSessionCookieName("X-Session-Id");
-
-    AuthHandler redirectAuthHandler = RedirectAuthHandler.create(authProvider, "/sign-in");
 
     router.get("/sign-in").handler(this::signIn);
     router.get("/sign-up").handler(this::signUp);
