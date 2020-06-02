@@ -12,6 +12,14 @@ import io.vertx.sqlclient.Tuple;
 
 public class AuthVerticle extends HttpVerticle {
 
+  /*
+    TODO
+     - Create authentication service
+     - Use vertx gen to generate proxy class
+     - Use service discovery to expose authentication class
+     - Update PgProvider to call authentication microservice
+   */
+
   @Override
   public void start(Promise<Void> startPromise) {
     super.start(startPromise);
@@ -49,7 +57,7 @@ public class AuthVerticle extends HttpVerticle {
   }
 
   private void signUp(RoutingContext rc) {
-    rc.response().sendFile("static/sign-up.html");
+    rc.response().sendFile("static/auth/sign-up.html");
   }
 
   private void signOut(RoutingContext rc) {
@@ -62,6 +70,6 @@ public class AuthVerticle extends HttpVerticle {
   }
 
   private void signIn(RoutingContext rc) {
-    rc.response().sendFile("static/sign-in.html");
+    rc.response().sendFile("static/auth/sign-in.html");
   }
 }
