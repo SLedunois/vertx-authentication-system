@@ -20,7 +20,7 @@ application {
   mainClassName = 'io.vertx.core.Launcher'
 }
 
-def mainVerticleName = 'fr.sledunois.vertx.authentication.MainVerticle'
+def mainVerticleName = 'fr.sledunois.vertx.MainVerticle'
 def watchForChange = 'src/**/*'
 def doOnChange = './gradlew classes'
 

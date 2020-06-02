@@ -1,4 +1,4 @@
-package fr.sledunois.vertx.authentication.bean;
+package fr.sledunois.vertx.auth.bean;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;

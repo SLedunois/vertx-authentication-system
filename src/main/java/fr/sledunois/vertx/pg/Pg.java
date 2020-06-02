@@ -1,4 +1,4 @@
-package fr.sledunois.vertx.authentication.pg;
+package fr.sledunois.vertx.pg;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;

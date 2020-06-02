@@ -1,7 +1,7 @@
-package fr.sledunois.vertx.authentication;
+package fr.sledunois.vertx.util;
 
-import fr.sledunois.vertx.authentication.pg.Pg;
-import fr.sledunois.vertx.authentication.provider.PgAuthProvider;
+import fr.sledunois.vertx.auth.provider.PgAuthProvider;
+import fr.sledunois.vertx.pg.Pg;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServer;
@@ -11,6 +11,7 @@ import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 
 public class HttpVerticle extends AbstractVerticle {
+  protected HttpServer server;
   protected AuthProvider authProvider = new PgAuthProvider();
   protected SessionStore sessionStore;
   protected Router router;

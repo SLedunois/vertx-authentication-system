@@ -1,18 +1,16 @@
-package fr.sledunois.vertx.authentication;
+package fr.sledunois.vertx.auth;
 
-import fr.sledunois.vertx.authentication.bean.Salt;
-import fr.sledunois.vertx.authentication.pg.Pg;
-import fr.sledunois.vertx.authentication.pg.PgResult;
+import fr.sledunois.vertx.auth.bean.Salt;
+import fr.sledunois.vertx.pg.Pg;
+import fr.sledunois.vertx.pg.PgResult;
+import fr.sledunois.vertx.util.HttpVerticle;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
-import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.*;
 import io.vertx.sqlclient.Tuple;
 
-public class MainVerticle extends HttpVerticle {
-
-  HttpServer server;
+public class AuthVerticle extends HttpVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) {
@@ -38,7 +36,9 @@ public class MainVerticle extends HttpVerticle {
     router.route().handler(sessionHandler);
     router.post("/login").handler(formLoginHandler);
     router.get("/").handler(redirectAuthHandler).handler(this::indexPage);
+    startPromise.complete();
   }
+
 
   private void register(RoutingContext rc) {
     MultiMap attributes = rc.request().formAttributes();
@@ -70,5 +70,4 @@ public class MainVerticle extends HttpVerticle {
   private void signIn(RoutingContext rc) {
     rc.response().sendFile("static/sign-in.html");
   }
-
 }

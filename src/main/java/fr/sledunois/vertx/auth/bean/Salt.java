@@ -1,4 +1,4 @@
-package fr.sledunois.vertx.authentication.bean;
+package fr.sledunois.vertx.auth.bean;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

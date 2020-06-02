@@ -1,9 +1,9 @@
-package fr.sledunois.vertx.authentication.provider;
+package fr.sledunois.vertx.auth.provider;
 
-import fr.sledunois.vertx.authentication.bean.Salt;
-import fr.sledunois.vertx.authentication.bean.UserImpl;
-import fr.sledunois.vertx.authentication.pg.Pg;
-import fr.sledunois.vertx.authentication.pg.PgResult;
+import fr.sledunois.vertx.auth.bean.Salt;
+import fr.sledunois.vertx.auth.bean.UserImpl;
+import fr.sledunois.vertx.pg.Pg;
+import fr.sledunois.vertx.pg.PgResult;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
