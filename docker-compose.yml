@@ -8,6 +8,7 @@ gradle:
     - ~/.gradle:/home/gradle/.gradle
   ports:
     - "3000:3000"
+    - "3001:3001"
     - "8000:8000"
   extra_hosts:
     - "localdev:192.168.56.102"

@@ -1,42 +1,53 @@
 package fr.sledunois.vertx.util;
 
+import fr.sledunois.vertx.auth.handler.AuthSessionHandler;
 import fr.sledunois.vertx.auth.provider.PgAuthProvider;
+import fr.sledunois.vertx.auth.store.RedisSessionStore;
 import fr.sledunois.vertx.pg.Pg;
+import fr.sledunois.vertx.redis.Redis;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.AuthHandler;
+import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.RedirectAuthHandler;
-import io.vertx.ext.web.handler.SessionHandler;
-import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 
 public class HttpVerticle extends AbstractVerticle {
+  /*
+     TODO
+     - Vertx session handler is not useful. Implements custom session handler based on redis
+   */
   protected HttpServer server;
-  protected AuthProvider authProvider = new PgAuthProvider();
+  protected AuthProvider authProvider;
   protected SessionStore sessionStore;
   protected Router router;
-  protected SessionHandler sessionHandler;
-  protected AuthHandler redirectAuthHandler;
+  protected Handler<RoutingContext> sessionHandler;
 
   @Override
   public void start(Promise<Void> startPromise) {
     Pg.getInstance().init(vertx, "localdev", 5432, "authentication", "web-education", "We_1234", 5);
+    Redis.getInstance().init(vertx, "redis://localdev:6379");
   }
 
   protected HttpServer createHttpServer(Integer port) {
-    redirectAuthHandler = RedirectAuthHandler.create(authProvider, "/sign-in");
-    sessionStore = LocalSessionStore.create(vertx);
-    sessionHandler = SessionHandler.create(sessionStore)
-      .setSessionCookieName("X-Session-Id");
+    sessionStore = new RedisSessionStore()
+      .init(vertx, new JsonObject());
+    authProvider = new PgAuthProvider().setStore(sessionStore);
+    sessionHandler = new AuthSessionHandler()
+      .setRedirectUri("/sign-in")
+      .setSessionStore(sessionStore);
     router = Router.router(vertx);
     router.route().handler(BodyHandler.create(false));
 
     return vertx.createHttpServer()
       .requestHandler(router)
-      .listen(port);
+      .listen(port, ar -> {
+        if (ar.succeeded()) System.out.println(String.format("Verticle listening on port %d", port));
+        else throw new RuntimeException(ar.cause());
+      });
   }
 }

@@ -10,11 +10,19 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.auth.User;
+import io.vertx.ext.web.sstore.SessionStore;
 import io.vertx.sqlclient.Tuple;
 
 import java.util.Objects;
 
 public class PgAuthProvider implements AuthProvider {
+  private SessionStore sessionStore;
+
+  public PgAuthProvider setStore(SessionStore store) {
+    this.sessionStore = store;
+    return this;
+  }
+
   @Override
   public void authenticate(JsonObject authInfo, Handler<AsyncResult<User>> handler) {
     String username = authInfo.getString("username");

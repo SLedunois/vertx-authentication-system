@@ -1,13 +1,15 @@
 package fr.sledunois.vertx.auth;
 
+import fr.sledunois.vertx.auth.bean.AuthCookie;
 import fr.sledunois.vertx.auth.bean.Salt;
+import fr.sledunois.vertx.auth.form.Field;
+import fr.sledunois.vertx.auth.handler.AuthFormLoginHandler;
 import fr.sledunois.vertx.pg.Pg;
 import fr.sledunois.vertx.pg.PgResult;
 import fr.sledunois.vertx.util.HttpVerticle;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.FormLoginHandler;
 import io.vertx.sqlclient.Tuple;
 
 public class AuthVerticle extends HttpVerticle {
@@ -25,19 +27,21 @@ public class AuthVerticle extends HttpVerticle {
     super.start(startPromise);
     server = createHttpServer(3000);
 
-    FormLoginHandler formLoginHandler = FormLoginHandler.create(authProvider)
-      .setPasswordParam("password")
-      .setUsernameParam("username")
-      .setDirectLoggedInOKURL("/");
+    AuthFormLoginHandler formLoginHandler = new AuthFormLoginHandler()
+      .setPasswordParam(Field.password.name())
+      .setUsernameParam(Field.username.name())
+      .setDirectLoggedInOKURL(Route.INDEX.path())
+      .setSessionStore(sessionStore)
+      .setAuthProvider(authProvider);
 
-    router.get("/sign-in").handler(this::signIn);
-    router.get("/sign-up").handler(this::signUp);
-    router.get("/sign-out").handler(this::signOut);
-    router.post("/register").handler(this::register);
+    router.get(Route.SIGN_IN.path()).handler(this::signIn);
+    router.get(Route.SIGN_UP.path()).handler(this::signUp);
+    router.get(Route.SIGN_OUT.path()).handler(this::signOut);
+    router.post(Route.REGISTER.path()).handler(this::register);
+    router.post(Route.LOGIN.path()).handler(formLoginHandler);
 
     router.route().handler(sessionHandler);
-    router.post("/login").handler(formLoginHandler);
-    router.get("/").handler(redirectAuthHandler).handler(this::indexPage);
+    router.get(Route.INDEX.path()).handler(this::indexPage);
     startPromise.complete();
   }
 
@@ -48,12 +52,12 @@ public class AuthVerticle extends HttpVerticle {
       rc.response().setStatusCode(400).end();
       return;
     }
-    String username = attributes.get("username");
-    String password = attributes.get("password");
+    String username = attributes.get(Field.username.name());
+    String password = attributes.get(Field.password.name());
     String salt = new Salt(password).SHA1();
     String query = "INSERT INTO public.user(username, password) VALUES ($1, $2) RETURNING *;";
     Pg.getInstance().preparedQuery(query, Tuple.of(username, salt),
-      PgResult.uniqueJsonResult(ar -> rc.response().setStatusCode(302).putHeader("location", ar.succeeded() ? "/" : "/sign-in").end()));
+      PgResult.uniqueJsonResult(ar -> rc.response().setStatusCode(302).putHeader("Location", ar.succeeded() ? Route.INDEX.path() : Route.SIGN_IN.path()).end()));
   }
 
   private void signUp(RoutingContext rc) {
@@ -61,8 +65,15 @@ public class AuthVerticle extends HttpVerticle {
   }
 
   private void signOut(RoutingContext rc) {
-    String sessionId = rc.request().getCookie("X-Session-Id").getValue();
-    sessionStore.delete(sessionId, ar -> rc.response().putHeader("location", ar.succeeded() ? "/sign-in" : "/").setStatusCode(302).end());
+    String sessionId = rc.request().getCookie(AuthCookie.name).getValue();
+    sessionStore.delete(sessionId, ar -> {
+      if (ar.failed()) {
+        rc.response().putHeader("Location", Route.INDEX.path()).setStatusCode(302).end();
+      } else {
+        rc.removeCookie(AuthCookie.name, true);
+        rc.response().putHeader("Location", Route.SIGN_IN.path()).setStatusCode(302).end();
+      }
+    });
   }
 
   private void indexPage(RoutingContext rc) {
